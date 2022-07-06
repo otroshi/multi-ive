@@ -42,7 +42,7 @@ def second_method(X, y, model_train, num_eliminations_perStep, num_steps):
 	"""
 
 	# set a unique label given by the combination of sex, age, and ethnicity
-	y = [yy[0] + '_' + yy[1] + '_' + yy[2] for yy in y]
+	y = [str(yy[0]) + '_' + str(yy[1]) + '_' + str(yy[2]) for yy in y]
 	ive = IVE(model_train, num_eliminations_perStep, num_steps)
 	ive.fit(X, y)
 	return ive
