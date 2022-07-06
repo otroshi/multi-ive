@@ -44,6 +44,7 @@ class IncrementalVariableElimination():
         
             X: array of (n_samples, n_features)
             y: target values / class labels
+            multi_var: boolean to specify if single or multi variables are considered
         """
         
         model = self.__model_train
