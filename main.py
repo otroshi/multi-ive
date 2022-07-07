@@ -20,8 +20,8 @@ labels = ['sex', 'age', 'ethnicity']
 length_embeddings = train_df.shape[1] - 4
 # number of steps and number of eliminations per step have to be adjusted depending on the feature size
 num_steps = 1
-num_eliminations = 5
-num_epochs = 100
+num_eliminations = 6
+num_epochs = 85
 # define classifier
 model_train = RandomForestClassifier(n_estimators=30)
 # set parameters for method one
@@ -50,7 +50,7 @@ x_test_second = x_test
 x_test_third = x_test
 
 for epoch in range(num_epochs):
-	print('--- {} ---'.format(epoch))
+	print('--- Epoch {} ---'.format(epoch))
 	print('First size: {} - Second size: {} - Third size: {}'.format(x_train_first.shape[1],
 																	 x_train_second.shape[1], x_train_third.shape[1]))
 	for x_train, x_test in zip([x_train_first, x_train_second, x_train_third], [x_test_first, x_test_second, x_test_third]):
