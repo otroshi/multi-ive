@@ -3,3 +3,5 @@ data/feret_embeddings/
 .idea/
 
 */__pycache__/
+
+results/

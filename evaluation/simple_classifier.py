@@ -3,6 +3,7 @@ import collections
 
 
 def get_mask(y_labels, keep_labels, samples_for_label):
+	# filter data in order to have balanced classes for training/evaluating sb-classifiers
 	train_indexes = []
 	for kl in keep_labels:
 		# get indexes for each label

@@ -2,7 +2,9 @@ import os
 import data.manage_data as manage_data
 import pandas as pd
 import evaluation.simple_classifier as simple_classifier
-import IVE.util as ive_util
+import evaluation.verification_perfromance as vp
+import evaluation.utils as eval_utils
+import IVE.utils as ive_util
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 
@@ -34,9 +36,9 @@ x_train = manage_data.get_x_ready(train_df, length_embeddings)
 x_test = manage_data.get_x_ready(test_df, length_embeddings)
 
 # normalize embeddings
-scaler = StandardScaler()
-x_train = scaler.fit_transform(x_train)
-x_test = scaler.transform(x_test)
+std_sc = StandardScaler()
+x_train = std_sc.fit_transform(x_train)
+x_test = std_sc.transform(x_test)
 
 # get labels
 y_train = manage_data.get_y_ready(train_df, labels)
@@ -49,11 +51,18 @@ x_test_first = x_test
 x_test_second = x_test
 x_test_third = x_test
 
+# helper for the evaluation of verification performance
+verification_indexes = vp.get_indexes(test_df)
+# to keep track of all the evaluation metrics computed
+metrics = eval_utils.get_metric_dict()
+
 for epoch in range(num_epochs):
 	print('--- Epoch {} ---'.format(epoch))
 	print('First size: {} - Second size: {} - Third size: {}'.format(x_train_first.shape[1],
 																	 x_train_second.shape[1], x_train_third.shape[1]))
-	for x_train, x_test in zip([x_train_first, x_train_second, x_train_third], [x_test_first, x_test_second, x_test_third]):
+	for ive_method, x in enumerate(zip([x_train_first, x_train_second, x_train_third], [x_test_first, x_test_second, x_test_third])):
+		x_train = x[0]
+		x_test = x[1]
 		scores = []
 		for i, label in enumerate(labels):
 			# compute the scores of every sb-classifier and store them
@@ -61,6 +70,9 @@ for epoch in range(num_epochs):
 			scores.append(score)
 
 		print(scores)
+		eer_verification = vp.evaluate_verification(verification_indexes, x_test)
+		print(eer_verification)
+		metrics = eval_utils.store_metrics(metrics, ive_method, scores, eer_verification)
 
 	first_ive = ive_util.first_method(x_train_first, y_train, model_train, n_e, n_s, elimination_order)
 	# print('first ive training done')
@@ -76,4 +88,5 @@ for epoch in range(num_epochs):
 	x_test_second = second_ive.transform(x_test_second)
 	x_test_third = third_ive.transform(x_test_third)
 
+eval_utils.plot_metrics(metrics)
 
