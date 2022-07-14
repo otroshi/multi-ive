@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 
 key_list = ['first', 'second', 'third']
@@ -24,6 +25,7 @@ def store_metrics(metrics, ive_method, sb_metrics, ver_metric):
 
 
 def plot_metrics(metrics):
+	os.makedirs("results", exist_ok=True)
 	plt.figure()
 	plt.xlabel('Epoch')
 	x_points = np.arange(1, len(metrics[key_list[0]][key2_partial_list[0]]) + 1)
