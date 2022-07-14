@@ -5,7 +5,8 @@ import evaluation.simple_classifier as simple_classifier
 import evaluation.verification_perfromance as vp
 import evaluation.utils as eval_utils
 import IVE.utils as ive_util
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier, GradientBoostingClassifier
+from xgboost import XGBClassifier
 from sklearn.preprocessing import StandardScaler
 import numpy as np
 
@@ -30,8 +31,14 @@ length_embeddings = train_df.shape[1] - 4
 num_steps = 1
 num_eliminations = 6
 num_epochs = 85
+
 # define classifier
-model_train = RandomForestClassifier(n_estimators=30, random_state=1)
+n_estimators = 30
+model_train = RandomForestClassifier(n_estimators=n_estimators, random_state=1)
+model_train = ExtraTreesClassifier(n_estimators=n_estimators, random_state=1)
+model_train = GradientBoostingClassifier(n_estimators=n_estimators, random_state=1)
+model_train = XGBClassifier(n_estimators=n_estimators, random_state=1)
+
 # set parameters for method one
 n_s = [num_steps, num_steps, num_steps]
 n_e = [int(num_eliminations / 3), int(num_eliminations / 3), int(num_eliminations / 3)]
@@ -91,4 +98,3 @@ for epoch in range(num_epochs):
 	x_third = third_ive.transform(x_third)
 
 eval_utils.plot_metrics(metrics)
-
