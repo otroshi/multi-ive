@@ -31,7 +31,7 @@ num_steps = 1
 num_eliminations = 6
 num_epochs = 85
 # define classifier
-model_train = RandomForestClassifier(n_estimators=30)
+model_train = RandomForestClassifier(n_estimators=30, random_state=1)
 # set parameters for method one
 n_s = [num_steps, num_steps, num_steps]
 n_e = [int(num_eliminations / 3), int(num_eliminations / 3), int(num_eliminations / 3)]

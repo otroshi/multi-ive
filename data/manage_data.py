@@ -33,7 +33,8 @@ def get_embeddings(embeddings_path):
 
 
 def code_age(age):
-	return [(int(int(a)/10) - 1) for a in age]
+	# to generate three classes for age
+	return [min(int((int(int(a)/10) - 1)/2), 2) for a in age]
 
 
 def code_sex(sex):

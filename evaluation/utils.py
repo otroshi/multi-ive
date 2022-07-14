@@ -36,4 +36,14 @@ def plot_metrics(metrics):
 	plt.legend(shadow=True)
 	plt.savefig('results/metrics.pdf')
 
+	for key2 in key2_partial_list + ['verification']:
+		plt.figure()
+		plt.xlabel('Epoch')
+		x_points = np.arange(1, len(metrics[key_list[0]][key2_partial_list[0]]) + 1)
+		for key in key_list:
+			data = np.array(metrics[key][key2])
+			plt.plot(x_points, data, label=key)
+		plt.legend(shadow=True)
+		plt.savefig('results/metrics_{}.pdf'.format(key2))
+
 
