@@ -35,9 +35,9 @@ num_epochs = 85
 # define classifier
 n_estimators = 30
 model_train = RandomForestClassifier(n_estimators=n_estimators, random_state=1)
-model_train = ExtraTreesClassifier(n_estimators=n_estimators, random_state=1)
-model_train = GradientBoostingClassifier(n_estimators=n_estimators, random_state=1)
-model_train = XGBClassifier(n_estimators=n_estimators, random_state=1)
+# model_train = ExtraTreesClassifier(n_estimators=n_estimators, random_state=1)
+# model_train = GradientBoostingClassifier(n_estimators=n_estimators, random_state=1)
+# model_train = XGBClassifier(n_estimators=n_estimators, random_state=1)
 
 # set parameters for method one
 n_s = [num_steps, num_steps, num_steps]
