@@ -7,9 +7,11 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import RepeatedStratifiedKFold
 from sklearn.model_selection import GridSearchCV
+import random
 
 
 def get_mask(y_labels, keep_labels, samples_for_label=-1):
+	random.seed(1)
 	# filter data in order to have balanced classes for training/evaluating sb-classifiers
 	# samples_for_label = -1 means that all the samples for the label of interest are kept
 	train_indexes = []
@@ -21,8 +23,9 @@ def get_mask(y_labels, keep_labels, samples_for_label=-1):
 			# store all the indexes
 			train_indexes += l_indexes
 		else:
-			# store the first n indexes
+			# store n indexes
 			assert(len(l_indexes) >= samples_for_label)
+			random.shuffle(l_indexes)
 			train_indexes += l_indexes[:samples_for_label]
 
 	train_mask = [i in train_indexes for i in range(len(y_labels))]
@@ -50,6 +53,7 @@ def filter_data(x_train, y_train, x_test, y_test, MIN_SAMPLES=80):
 
 def get_model(x_train, y_train, fine_tun=False):
 	clf = MLPClassifier(random_state=1, max_iter=10000, learning_rate='adaptive')
+	# clf = svm.SVC(random_state=1)
 
 	if fine_tun:
 		hidden = [(50,), (100,), (200,)]
