@@ -116,3 +116,6 @@ class IncrementalVariableElimination():
         for mask in self.__mask_list:
             X = X[:, mask]
         return X
+
+    def get_mask(self):
+        return self.__mask_list

@@ -77,7 +77,7 @@ def get_model(x_train, y_train, fine_tun=False):
 	return clf
 
 
-def train_evaluate_simple_classifier(x_train, y_train, x_test, y_test):
+def train_evaluate_classifier(x_train, y_train, x_test, y_test, classifiers):
 	# filter data according to the explanation of the function filter_data
 	x_train, y_train, x_test, y_test = filter_data(x_train, y_train, x_test, y_test)
 
@@ -85,14 +85,22 @@ def train_evaluate_simple_classifier(x_train, y_train, x_test, y_test):
 	oversample = SMOTE(random_state=1)
 	x_train, y_train = oversample.fit_resample(x_train, y_train)
 
-	# training
-	clf = get_model(x_train, y_train)
-	clf.fit(x_train, y_train)
-	# clf = MLPClassifier(random_state=1, early_stopping=True).fit(x_train, y_train)
-	# clf = svm.SVC(random_state=1).fit(x_train, y_train)
-	# clf = RandomForestClassifier(n_estimators=30, random_state=1).fit(x_train, y_train)
-	# clf = GaussianNB().fit(x_train, y_train)
-	# clf = LogisticRegression().fit(x_train, y_train)
+	scores = {}
+	for c in classifiers:
+		# training
+		clf = MLPClassifier(random_state=1, max_iter=10000, learning_rate='adaptive') if c == 'mlp' else \
+			svm.SVC(random_state=1) if c == 'svm' else \
+			RandomForestClassifier(n_estimators=30, random_state=1) if c == 'rf' else None
+		clf.fit(x_train, y_train)
+		# clf = MLPClassifier(random_state=1, early_stopping=True).fit(x_train, y_train)
+		# clf = svm.SVC(random_state=1).fit(x_train, y_train)
+		# clf = RandomForestClassifier(n_estimators=30, random_state=1).fit(x_train, y_train)
+		# clf = GaussianNB().fit(x_train, y_train)
+		# clf = LogisticRegression().fit(x_train, y_train)
 
-	# evaluation
-	return clf.score(x_test, y_test)
+		# evaluation
+		score = clf.score(x_test, y_test)
+		scores[c] = score
+
+	# to simplify for the moment: if using only a classifier it returns the scores in the format accepted by the main
+	return scores if len(classifiers) > 1 else scores[classifiers[0]]
