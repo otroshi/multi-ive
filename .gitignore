@@ -5,3 +5,9 @@ data/feret_embeddings/
 */__pycache__/
 
 results/
+
+scratch.py
+
+data/train*.csv
+
+data/test*.csv

@@ -12,11 +12,12 @@ import numpy as np
 
 class IncrementalVariableElimination():
     
-    def __init__(self, model_train, num_eliminations_perStep, num_steps):
+    def __init__(self, model_train, num_eliminations_perStep, num_steps, blocked_features=0):
         """
             model_train: sklearn model that contains .feature_importance
             num_eliminations_perSteps: number of variable eliminations in each step
             num_steps: number of iterations of eliminations
+            blocked_features: in case of PCA, prevent the elimination of the first features
             
             num_steps and num_eliminations_perSteps have to be adjusted to the
             feature sizes
@@ -25,6 +26,7 @@ class IncrementalVariableElimination():
         self.__model_train = model_train
         self.__num_eliminations_perStep = num_eliminations_perStep
         self.__num_steps = num_steps
+        self.__blocked_features = blocked_features
         
     def fit(self, X, y_att, multi_var=False):
         """ Model is trained to determine the feature mask to filter the variables
@@ -70,6 +72,10 @@ class IncrementalVariableElimination():
                 f_importance_cum += f_imp
 
         f_imp_argsort = np.argsort(f_importance_cum)[::-1]
+
+        # to avoid the elimination of the first features (useful in case of PCA)
+        blocked_featues = [i for i in range(self.__blocked_features)]
+        f_imp_argsort = [f for f in f_imp_argsort if f not in blocked_featues]
 
         # get list of values to remove
         thr_list = f_imp_argsort[0:self.__num_eliminations_perStep]

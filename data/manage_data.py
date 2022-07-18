@@ -74,9 +74,9 @@ def get_ordered_labels(ord_df, annotation, length_embeddings):
 	return ord_lab_df[['filename', 'sex', 'age', 'ethnicity'] + ['f' + str(i) for i in range(length_embeddings)]]
 
 
-def get_train_test_df(ord_lab_df, pct=0.7):
+def get_train_test_df(ord_lab_df, seed, pct=0.7):
 	import random
-	random.seed(2)
+	random.seed(seed)
 
 	# get the list of patients (with repetitions)
 	filename_patients = [p[:5] for p in list(ord_lab_df['filename'])]
@@ -98,15 +98,15 @@ def get_train_test_df(ord_lab_df, pct=0.7):
 	return train_df, test_df
 
 
-def get_training_test_df(save_files=False):
+def get_training_test_df(seed, save_files=False):
 	ordered_filenames_embeddings_df, length_embeddings = get_embeddings('data/feret_embeddings')
 	annotation = manage_annotation_file('data/annotation.csv')
 	ordered_filenames_lab_df = get_ordered_labels(ordered_filenames_embeddings_df, annotation, length_embeddings)
-	train_df, test_df = get_train_test_df(ordered_filenames_lab_df)
+	train_df, test_df = get_train_test_df(ordered_filenames_lab_df, seed)
 
 	if save_files:
-		train_df.to_csv('data/train_df.csv', index=False)
-		test_df.to_csv('data/test_df.csv', index=False)
+		train_df.to_csv('data/train_df_' + str(seed) + '.csv', index=False)
+		test_df.to_csv('data/test_df_' + str(seed) + '.csv', index=False)
 
 	return train_df, test_df
 
