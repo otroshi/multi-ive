@@ -87,7 +87,7 @@ def execute_all(model_feat_importance, classifiers, use_pca, seed, blocked_pca_f
 	# helper for the evaluation of verification performance
 	verification_indexes = vp.get_indexes(total_df)
 	# to keep track of all the evaluation metrics computed
-	metrics = eval_utils.get_metric_dict()
+	metrics = eval_utils.get_metric_dict(classifiers)
 
 	for epoch in range(num_epochs):
 		print('--- Epoch {} ---'.format(epoch))
@@ -104,7 +104,9 @@ def execute_all(model_feat_importance, classifiers, use_pca, seed, blocked_pca_f
 				# compute the scores of every sb-classifier and store them
 				score = simple_classifier.train_evaluate_classifier(x_train, y_train[:, i], x_test, y_test[:, i], classifiers, seed)
 				scores.append(score)
-			print(scores)
+			for s in scores:
+				# only to have an idea of the trend
+				print(s[classifiers[0]])
 
 			eer_verification = vp.evaluate_verification(verification_indexes, x)
 			print(eer_verification)
@@ -129,9 +131,9 @@ def execute_all(model_feat_importance, classifiers, use_pca, seed, blocked_pca_f
 			third_mask = third_ive.get_mask()
 
 			# fix the first mask, simplify the representation for the other masks
-			first_mask = ive_util.fix_first_mask(first_mask, 1, epoch, save=True)
-			second_mask = ive_util.fix_first_mask(second_mask, 2, epoch, save=True)
-			third_mask = ive_util.fix_first_mask(third_mask, 3, epoch, save=True)
+			first_mask = ive_util.fix_mask(first_mask, 1, epoch, seed, save=True)
+			second_mask = ive_util.fix_mask(second_mask, 2, epoch, seed, save=True)
+			third_mask = ive_util.fix_mask(third_mask, 3, epoch, seed, save=True)
 
 			# eliminate features in PCA
 			x_first = zeros_pca(x_first, first_mask)
@@ -149,7 +151,8 @@ def execute_all(model_feat_importance, classifiers, use_pca, seed, blocked_pca_f
 			x_second = second_ive.transform(x_second)
 			x_third = third_ive.transform(x_third)
 
-	eval_utils.plot_metrics(metrics)
+	eval_utils.plot_metrics(metrics, seed, save_files=True)
 
 
-execute_all('rf', ['mlp'], True, 0, 3)
+execute_all('rf', ['mlp', 'svm_rbf'], True, 0, 3)
+# execute_all('rf', ['mlp', 'svm_lin', 'svm_rbf', 'rf', 'gb', 'nb', 'et', 'log_reg'], True, 0, 3)

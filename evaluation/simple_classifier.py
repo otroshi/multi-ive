@@ -2,11 +2,9 @@ from sklearn.neural_network import MLPClassifier
 from sklearn import svm
 import collections
 from imblearn.over_sampling import SMOTE
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier, GradientBoostingClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import RepeatedStratifiedKFold
-from sklearn.model_selection import GridSearchCV
 import random
 
 
@@ -60,21 +58,22 @@ def train_evaluate_classifier(x_train, y_train, x_test, y_test, classifiers, see
 	x_train, y_train = oversample.fit_resample(x_train, y_train)
 
 	scores = {}
+	n_estimators = 30
 	for c in classifiers:
 		# training
 		clf = MLPClassifier(random_state=seed, max_iter=10000, learning_rate='adaptive') if c == 'mlp' else \
-			svm.SVC(random_state=seed) if c == 'svm' else \
-			RandomForestClassifier(n_estimators=30, random_state=seed) if c == 'rf' else None
+			svm.SVC(random_state=seed, kernel='linear') if c == 'svm_lin' else \
+			svm.SVC(random_state=seed, kernel='rbf') if c == 'svm_rbf' else \
+			RandomForestClassifier(n_estimators=n_estimators, random_state=seed) if c == 'rf' else \
+			GradientBoostingClassifier(n_estimators=n_estimators, random_state=seed) if c == 'gb' else \
+			GaussianNB() if c == 'nb' else \
+			ExtraTreesClassifier(n_estimators=n_estimators, random_state=seed) if c == 'et' else \
+			LogisticRegression(random_state=seed, max_iter=10000) if c == 'log_reg' else \
+			None
 		clf.fit(x_train, y_train)
-		# clf = MLPClassifier(random_state=seed, early_stopping=True).fit(x_train, y_train)
-		# clf = svm.SVC(random_state=seed).fit(x_train, y_train)
-		# clf = RandomForestClassifier(n_estimators=30, random_state=seed).fit(x_train, y_train)
-		# clf = GaussianNB().fit(x_train, y_train)
-		# clf = LogisticRegression().fit(x_train, y_train)
 
 		# evaluation
 		score = clf.score(x_test, y_test)
 		scores[c] = score
 
-	# to simplify for the moment: if using only a classifier it returns the scores in the format accepted by the main
-	return scores if len(classifiers) > 1 else scores[classifiers[0]]
+	return scores

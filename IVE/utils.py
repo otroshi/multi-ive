@@ -58,7 +58,7 @@ def third_method(X, y, model_train, num_eliminations_perStep, num_steps, blocked
 	return ive
 
 
-def fix_first_mask(mask, method_id, epoch, save=False):
+def fix_mask(mask, method_id, epoch, seed, save=False):
 	if not method_id == 1:
 		final_mask = mask[1]
 
@@ -81,8 +81,11 @@ def fix_first_mask(mask, method_id, epoch, save=False):
 		final_mask = lev_3
 
 	if save:
-		folder = "results/method" + str(method_id)
+		seed = str(seed)
+		os.makedirs("results", exist_ok=True)
+		os.makedirs(os.path.join('results', seed), exist_ok=True)
+		folder = os.path.join(os.path.join('results', seed), "method" + str(method_id))
 		os.makedirs(folder, exist_ok=True)
-		np.save(folder + "/{0:03}".format(epoch), final_mask)
+		np.save(os.path.join(folder, "{0:03}".format(epoch)), final_mask)
 
 	return final_mask
