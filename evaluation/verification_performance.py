@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn import metrics
-
+import random
 
 def get_indexes(test_df):
 	# return a dict that contains for each patient the indexes of samples to consider for verification
@@ -38,22 +38,25 @@ def perform_genuine_comparisons(dict_samples):
 	return np.array(scores)
 
 
-def perform_impostor_comparisons(dict_samples):
+def perform_impostor_comparisons(dict_samples, seed):
+	random.seed(seed)
 	# use the first sample for each subject
 	scores = []
 	# consider all the possible pairs of enrolment - probe
 	for k1, v1 in dict_samples.items():
-		for k2, v2 in dict_samples.items():
+		others = list(dict_samples.keys())
+		random.shuffle(others)
+		for o in others[:10]:
 			# to avoid impostor comparisons from the same subject
-			if not k1 == k2:
-				scores.append(similarity_score(v1[0], v2[0]))
+			if not k1 == o:
+				scores.append(similarity_score(v1[0], dict_samples[o][0]))
 	return np.array(scores)
 
 
-def evaluate_verification(indexes, test_data):
-	dict_ = create_verification_dict(indexes, test_data)
+def evaluate_verification(indexes, data, seed):
+	dict_ = create_verification_dict(indexes, data)
 	genuines = perform_genuine_comparisons(dict_)
-	impostors = perform_impostor_comparisons(dict_)
+	impostors = perform_impostor_comparisons(dict_, seed)
 
 	scores = np.concatenate((genuines, impostors))
 	true_labels = [1 for _ in range(len(genuines))] + [0 for _ in range(len(impostors))]

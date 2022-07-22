@@ -3,8 +3,9 @@ import numpy as np
 import os
 
 
+# TODO: automatically harmonize labels between evaluate_IVE.py and this file
 key_list = ['first', 'second', 'third']
-key2_partial_list = ['sex', 'age', 'ethnicity']
+key2_partial_list = ['sex', 'ethnicity']
 
 
 def get_metric_dict(classifiers):
@@ -28,10 +29,7 @@ def store_metrics(metrics, ive_method, sb_metrics, ver_metric):
 	return metrics
 
 
-def plot_metrics(metrics, seed, save_files=True):
-	seed = str(seed)
-	os.makedirs("results", exist_ok=True)
-	os.makedirs(os.path.join('results', seed), exist_ok=True)
+def plot_metrics(metrics, folder, save_files=True):
 	plt.figure()
 	plt.xlabel('Epoch')
 	x_points = np.arange(1, len(metrics[key_list[0]]['verification']) + 1)
@@ -42,17 +40,17 @@ def plot_metrics(metrics, seed, save_files=True):
 			for ii, c in enumerate(classifiers):
 				data = np.array(metrics[key][key2][c])
 				if save_files:
-					np.save(os.path.join(os.path.join('results', seed), key + '_' + key2 + '_' + c + '.npy'), data)
+					np.save(os.path.join(os.path.join('results', folder), key + '_' + key2 + '_' + c + '.npy'), data)
 				if ii == 0:
 					# for the moment, plot the scores from only one classifier
 					plt.plot(x_points, data, label=key2)
 		data = np.array(metrics[key]['verification'])
 		if save_files:
-			np.save(os.path.join(os.path.join('results', seed), key + '_' + 'verification' + '.npy'), data)
+			np.save(os.path.join(os.path.join('results', folder), key + '_' + 'verification' + '.npy'), data)
 		plt.plot(x_points, data, label='verification')
 	plt.legend(shadow=True)
 	if save_files:
-		plt.savefig(os.path.join(os.path.join('results', seed), 'metrics.pdf'))
+		plt.savefig(os.path.join(os.path.join('results', folder), 'metrics.pdf'))
 
 	for key2 in key2_partial_list + ['verification']:
 		plt.figure()
@@ -68,6 +66,6 @@ def plot_metrics(metrics, seed, save_files=True):
 			plt.plot(x_points, data, label=key)
 		plt.legend(shadow=True)
 		if save_files:
-			plt.savefig(os.path.join(os.path.join('results', seed), 'metrics_{}.pdf'.format(key2)))
+			plt.savefig(os.path.join(os.path.join('results', folder), 'metrics_{}.pdf'.format(key2)))
 
 

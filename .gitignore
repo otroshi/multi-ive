@@ -1,4 +1,8 @@
-data/feret_embeddings/
+data/feret_embeddings*
+
+data/diveface*
+
+data/myselection*
 
 .idea/
 
@@ -11,3 +15,7 @@ scratch.py
 data/train*.csv
 
 data/test*.csv
+
+data/diveface*.csv
+
+data/feret*.csv

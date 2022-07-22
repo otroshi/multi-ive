@@ -53,15 +53,17 @@ def train_evaluate_classifier(x_train, y_train, x_test, y_test, classifiers, see
 	# filter data according to the explanation of the function filter_data
 	x_train, y_train, x_test, y_test = filter_data(x_train, y_train, x_test, y_test, seed)
 
+
 	# balance training data
-	oversample = SMOTE(random_state=seed)
-	x_train, y_train = oversample.fit_resample(x_train, y_train)
+	# oversample = SMOTE(random_state=seed)
+	# x_train, y_train = oversample.fit_resample(x_train, y_train)
 
 	scores = {}
 	n_estimators = 30
 	for c in classifiers:
 		# training
-		clf = MLPClassifier(random_state=seed, max_iter=10000, learning_rate='adaptive') if c == 'mlp' else \
+		# TODO: fix parameters for classifiers fdifferent from MLP
+		clf = MLPClassifier(random_state=seed, early_stopping=True, learning_rate='adaptive') if c == 'mlp' else \
 			svm.SVC(random_state=seed, kernel='linear') if c == 'svm_lin' else \
 			svm.SVC(random_state=seed, kernel='rbf') if c == 'svm_rbf' else \
 			RandomForestClassifier(n_estimators=n_estimators, random_state=seed) if c == 'rf' else \
