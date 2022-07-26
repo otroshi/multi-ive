@@ -8,6 +8,7 @@ from sklearn.preprocessing import StandardScaler
 import numpy as np
 from sklearn.decomposition import PCA
 import pickle as pk
+import tqdm
 
 
 def zeros_pca(x_total, mask):
@@ -62,7 +63,7 @@ def execute_all(model_feat_importance, use_pca, seed, blocked_pca_features=0):
 	# fit the scaler with only training data
 	# TODO: check classes for IVE training
 	x_total = std_sc.fit_transform(x_total)
-	pk.dump(std_sc, open(os.path.join(os.path.join('result', folder), 'std_sc.pkl'), "wb"))
+	pk.dump(std_sc, open(os.path.join(os.path.join('results', folder), 'std_sc.pkl'), "wb"))
 
 	# get labels
 	y = manage_data.get_y_ready(feret_df, labels)
@@ -71,15 +72,15 @@ def execute_all(model_feat_importance, use_pca, seed, blocked_pca_features=0):
 		# transform from original to PCA domain
 		pca = PCA(n_components=length_embeddings)
 		x_total = pca.fit_transform(x_total)
-		pk.dump(pca, open(os.path.join(os.path.join('result', folder), 'pca.pkl'), "wb"))
+		pk.dump(pca, open(os.path.join(os.path.join('results', folder), 'pca.pkl'), "wb"))
 
 	x_first = np.copy(x_total)
 	x_second = np.copy(x_total)
 	x_third = np.copy(x_total)
 
-	for epoch in range(num_epochs):
-		print('--- Epoch {} ---'.format(epoch))
-		print('First size: {} - Second size: {} - Third size: {}'.format(x_first.shape[1], x_second.shape[1], x_third.shape[1]))
+	for epoch in tqdm.tqdm(range(num_epochs)):
+		# print('--- Epoch {} ---'.format(epoch))
+		# print('First size: {} - Second size: {} - Third size: {}'.format(x_first.shape[1], x_second.shape[1], x_third.shape[1]))
 
 		first_ive = ive_util.first_method(x_first, y, model_train, n_e, n_s, elimination_order, blocked_features)
 		# print('first ive training done')
@@ -103,8 +104,11 @@ def execute_all(model_feat_importance, use_pca, seed, blocked_pca_features=0):
 		x_second = second_ive.transform(x_second)
 		x_third = third_ive.transform(x_third)
 
-	print('Done!')
+	print('Done! folder: ', folder)
 
 
-execute_all('rf', True, 0, 3)
+for seed in range(10):
+	execute_all('rf', False, seed)
+	for k in [0, 3, 5]:
+		execute_all('rf', True, seed, k)
 # execute_all('rf', ['mlp', 'svm_lin', 'svm_rbf', 'rf', 'gb', 'nb', 'et', 'log_reg'], True, 0, 3)

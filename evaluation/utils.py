@@ -3,16 +3,18 @@ import numpy as np
 import os
 
 
-# TODO: automatically harmonize labels between evaluate_IVE.py and this file
 key_list = ['first', 'second', 'third']
-key2_partial_list = ['sex', 'ethnicity']
+
+
+def get_labels():
+	return ['age']
 
 
 def get_metric_dict(classifiers):
 	metrics = {}
 	for key in key_list:
 		metrics[key] = {}
-		for key2 in key2_partial_list:
+		for key2 in get_labels():
 			metrics[key][key2] = {}
 			for c in classifiers:
 				metrics[key][key2][c] = []
@@ -22,7 +24,7 @@ def get_metric_dict(classifiers):
 
 def store_metrics(metrics, ive_method, sb_metrics, ver_metric):
 	key = key_list[ive_method]
-	for i, key2 in enumerate(key2_partial_list):
+	for i, key2 in enumerate(get_labels()):
 		for c in list(sb_metrics[0].keys()):
 			metrics[key][key2][c].append(sb_metrics[i][c])
 	metrics[key]['verification'].append(ver_metric)
@@ -30,12 +32,13 @@ def store_metrics(metrics, ive_method, sb_metrics, ver_metric):
 
 
 def plot_metrics(metrics, folder, save_files=True):
+	verification = not(metrics[key_list[0]]['verification'][0] == 'na')
 	plt.figure()
 	plt.xlabel('Epoch')
 	x_points = np.arange(1, len(metrics[key_list[0]]['verification']) + 1)
 	for i, key in enumerate(key_list):
 		plt.subplot(3, 1, i + 1)
-		for key2 in key2_partial_list:
+		for key2 in get_labels():
 			classifiers = list(metrics[key][key2].keys())
 			for ii, c in enumerate(classifiers):
 				data = np.array(metrics[key][key2][c])
@@ -44,15 +47,17 @@ def plot_metrics(metrics, folder, save_files=True):
 				if ii == 0:
 					# for the moment, plot the scores from only one classifier
 					plt.plot(x_points, data, label=key2)
-		data = np.array(metrics[key]['verification'])
-		if save_files:
-			np.save(os.path.join(os.path.join('results', folder), key + '_' + 'verification' + '.npy'), data)
-		plt.plot(x_points, data, label='verification')
+		if verification:
+			data = np.array(metrics[key]['verification'])
+			if save_files:
+				np.save(os.path.join(os.path.join('results', folder), key + '_' + 'verification' + '.npy'), data)
+			plt.plot(x_points, data, label='verification')
 	plt.legend(shadow=True)
-	if save_files:
-		plt.savefig(os.path.join(os.path.join('results', folder), 'metrics.pdf'))
+	if verification:
+		if save_files:
+			plt.savefig(os.path.join(os.path.join('results', folder), 'metrics.pdf'))
 
-	for key2 in key2_partial_list + ['verification']:
+	for key2 in get_labels() + (['verification'] if verification else []):
 		plt.figure()
 		plt.xlabel('Epoch')
 		x_points = np.arange(1, len(metrics[key_list[0]]['verification']) + 1)

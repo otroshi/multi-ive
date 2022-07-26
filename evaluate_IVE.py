@@ -2,10 +2,12 @@ import pickle as pk
 import os
 import numpy as np
 import evaluation.load_diveface as load_diveface
+import evaluation.load_UTKFace as load_UTKFace
 import evaluation.utils as eval_utils
 import evaluation.simple_classifier as simple_classifier
 import evaluation.verification_performance as vp
 import pandas as pd
+import random
 
 
 def zeros_pca(x_total, mask):
@@ -15,6 +17,20 @@ def zeros_pca(x_total, mask):
 	for ind in indexes:
 		x_total[:, ind] = np.zeros((len(x_total)))
 	return x_total
+
+
+def create_random_masks(seed, k, length_embedding):
+	random.seed(seed)
+	masks = {'1': [], '2': [], '3': []}
+	num_epochs = 170
+	for i in range(1, 4):
+		indexes = [i for i in range(k, length_embedding)]
+		random.shuffle(indexes)
+		for epoch in range(num_epochs):
+			ind_false = indexes[:(epoch+1)*3]
+			mask = np.array([ix not in ind_false for ix in range(length_embedding)])
+			masks[str(i)].append(mask)
+	return masks
 
 
 def fix_pca_masks(masks):
@@ -37,7 +53,7 @@ def fix_pca_masks(masks):
 	return new_masks
 
 
-def execute_evaluation(classifiers, use_pca, seed, blocked_pca_features=0):
+def execute_evaluation(db, classifiers, use_pca, seed, blocked_pca_features=0):
 	folder = str(seed) + ('_pca' if use_pca else '_NO_pca')
 
 	# load scaler and PCA
@@ -59,26 +75,44 @@ def execute_evaluation(classifiers, use_pca, seed, blocked_pca_features=0):
 		masks = fix_pca_masks(masks)
 
 	# load data for evaluation
-	# create
-	if not os.path.isfile('data/diveface_df.csv'):
-		diveface_df, length_embeddings = load_diveface.get_diveface_df(r'data\diveface_embeddings', seed,
-																	   save_files=True, limit_size=True)
-	else:
-		diveface_df = pd.read_csv('data/diveface_df.csv')
-		length_embeddings = diveface_df.shape[1] - 5
+	if db == 'diveface':
+		# create
+		if not os.path.isfile('data/diveface_df.csv'):
+			diveface_df, length_embeddings = load_diveface.get_diveface_df(r'data\diveface_embeddings', seed,
+																		   save_files=True, limit_size=True)
+		else:
+			diveface_df = pd.read_csv('data/diveface_df.csv')
+			length_embeddings = diveface_df.shape[1] - 5
 
-	train_indexes, test_indexes = load_diveface.get_sb_train_test_indexes(diveface_df, seed, length_embeddings)
-	verification_indexes = load_diveface.get_verification_indexes(diveface_df, seed, length_embeddings)
+		train_indexes, test_indexes = load_diveface.get_sb_train_test_indexes(diveface_df, seed, length_embeddings)
+		verification_indexes = load_diveface.get_verification_indexes(diveface_df, seed, length_embeddings)
 
-	# get data ready to perform evaluation of SB and verification
-	x_total = load_diveface.get_x_ready(diveface_df, length_embeddings)
+		# get data ready to perform evaluation of SB and verification
+		x_total = load_diveface.get_x_ready(diveface_df, length_embeddings)
+		labels = eval_utils.get_labels()
+		y = load_diveface.get_y_ready(diveface_df, labels)
+
+	elif db == 'utkface':
+		# create
+		if not os.path.isfile('data/utkface_df.csv'):
+			utkface_df, length_embeddings = load_UTKFace.get_utkface_df(r'data\utkface_embeddings', seed,
+																		   save_files=True, limit_size=True)
+		else:
+			utkface_df = pd.read_csv('data/utkface_df.csv')
+			length_embeddings = utkface_df.shape[1] - 2
+
+		train_indexes, test_indexes = load_UTKFace.get_sb_train_test_indexes(utkface_df, seed, length_embeddings)
+
+		# get data ready to perform evaluation of SB and verification
+		x_total = load_UTKFace.get_x_ready(utkface_df, length_embeddings)
+		labels = eval_utils.get_labels()
+		y = load_UTKFace.get_y_ready(utkface_df, labels)
+
 	x_total = std_sc.transform(x_total)
 	x_first = np.copy(x_total)
 	x_second = np.copy(x_total)
 	x_third = np.copy(x_total)
 
-	labels = ['sex', 'ethnicity']
-	y = load_diveface.get_y_ready(diveface_df, labels)
 	metrics = eval_utils.get_metric_dict(classifiers)
 
 	for epoch in range(num_epochs):
@@ -99,7 +133,7 @@ def execute_evaluation(classifiers, use_pca, seed, blocked_pca_features=0):
 				# only to have an idea of the trend
 				txt += l + ': ' + str(s[classifiers[0]]) + '---'
 
-			eer_verification = vp.evaluate_verification(verification_indexes, x, seed)
+			eer_verification = vp.evaluate_verification(verification_indexes, x, seed) if db == 'diveface' else 'na'
 			txt += 'EER: ' + str(eer_verification)
 			print(txt + ('' if not ive_method == 2 else '\n'))
 			metrics = eval_utils.store_metrics(metrics, ive_method, scores, eer_verification)
@@ -121,10 +155,11 @@ def execute_evaluation(classifiers, use_pca, seed, blocked_pca_features=0):
 			x_third = pca.inverse_transform(x_third)
 
 		else:
-			# TODO: eliminate features in the normal domain
-			pass
+			x_first = x_first[:, masks['1'][epoch]]
+			x_second = x_second[:, masks['2'][epoch]]
+			x_third = x_third[:, masks['3'][epoch]]
 
 	eval_utils.plot_metrics(metrics, folder, save_files=True)
 
 
-execute_evaluation(['mlp'], True, 0, 3)
+execute_evaluation('utkface', ['mlp'], True, 0, 3)

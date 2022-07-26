@@ -62,12 +62,12 @@ def train_evaluate_classifier(x_train, y_train, x_test, y_test, classifiers, see
 	n_estimators = 30
 	for c in classifiers:
 		# training
-		# TODO: fix parameters for classifiers fdifferent from MLP
+		# TODO: fix parameters for classifiers different from MLP
 		clf = MLPClassifier(random_state=seed, early_stopping=True, learning_rate='adaptive') if c == 'mlp' else \
 			svm.SVC(random_state=seed, kernel='linear') if c == 'svm_lin' else \
 			svm.SVC(random_state=seed, kernel='rbf') if c == 'svm_rbf' else \
 			RandomForestClassifier(n_estimators=n_estimators, random_state=seed) if c == 'rf' else \
-			GradientBoostingClassifier(n_estimators=n_estimators, random_state=seed) if c == 'gb' else \
+			GradientBoostingClassifier(n_estimators=n_estimators, n_iter_no_change=10, random_state=seed) if c == 'gb' else \
 			GaussianNB() if c == 'nb' else \
 			ExtraTreesClassifier(n_estimators=n_estimators, random_state=seed) if c == 'et' else \
 			LogisticRegression(random_state=seed, max_iter=10000) if c == 'log_reg' else \

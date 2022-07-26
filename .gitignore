@@ -4,6 +4,8 @@ data/diveface*
 
 data/myselection*
 
+data/utkface*
+
 .idea/
 
 */__pycache__/
@@ -19,3 +21,5 @@ data/test*.csv
 data/diveface*.csv
 
 data/feret*.csv
+
+data/utkface*.csv
