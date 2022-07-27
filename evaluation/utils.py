@@ -6,15 +6,18 @@ import os
 key_list = ['first', 'second', 'third']
 
 
-def get_labels():
-	return ['age']
+def get_labels(db):
+	if db == 'diveface':
+		return ['sex', 'ethnicity']
+	elif db == 'utkface':
+		return ['age']
 
 
-def get_metric_dict(classifiers):
+def get_metric_dict(classifiers, db):
 	metrics = {}
 	for key in key_list:
 		metrics[key] = {}
-		for key2 in get_labels():
+		for key2 in get_labels(db):
 			metrics[key][key2] = {}
 			for c in classifiers:
 				metrics[key][key2][c] = []
@@ -22,23 +25,23 @@ def get_metric_dict(classifiers):
 	return metrics
 
 
-def store_metrics(metrics, ive_method, sb_metrics, ver_metric):
+def store_metrics(metrics, ive_method, sb_metrics, ver_metric, db):
 	key = key_list[ive_method]
-	for i, key2 in enumerate(get_labels()):
+	for i, key2 in enumerate(get_labels(db)):
 		for c in list(sb_metrics[0].keys()):
 			metrics[key][key2][c].append(sb_metrics[i][c])
 	metrics[key]['verification'].append(ver_metric)
 	return metrics
 
 
-def plot_metrics(metrics, folder, save_files=True):
+def plot_metrics(metrics, folder, db, save_files=True):
 	verification = not(metrics[key_list[0]]['verification'][0] == 'na')
 	plt.figure()
 	plt.xlabel('Epoch')
 	x_points = np.arange(1, len(metrics[key_list[0]]['verification']) + 1)
 	for i, key in enumerate(key_list):
 		plt.subplot(3, 1, i + 1)
-		for key2 in get_labels():
+		for key2 in get_labels(db):
 			classifiers = list(metrics[key][key2].keys())
 			for ii, c in enumerate(classifiers):
 				data = np.array(metrics[key][key2][c])
@@ -57,7 +60,7 @@ def plot_metrics(metrics, folder, save_files=True):
 		if save_files:
 			plt.savefig(os.path.join(os.path.join('results', folder), 'metrics.pdf'))
 
-	for key2 in get_labels() + (['verification'] if verification else []):
+	for key2 in get_labels(db) + (['verification'] if verification else []):
 		plt.figure()
 		plt.xlabel('Epoch')
 		x_points = np.arange(1, len(metrics[key_list[0]]['verification']) + 1)

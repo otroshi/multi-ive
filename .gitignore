@@ -23,3 +23,5 @@ data/diveface*.csv
 data/feret*.csv
 
 data/utkface*.csv
+
+data/old/

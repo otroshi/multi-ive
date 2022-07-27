@@ -89,7 +89,7 @@ def execute_evaluation(db, classifiers, use_pca, seed, blocked_pca_features=0):
 
 		# get data ready to perform evaluation of SB and verification
 		x_total = load_diveface.get_x_ready(diveface_df, length_embeddings)
-		labels = eval_utils.get_labels()
+		labels = eval_utils.get_labels(db)
 		y = load_diveface.get_y_ready(diveface_df, labels)
 
 	elif db == 'utkface':
@@ -105,7 +105,7 @@ def execute_evaluation(db, classifiers, use_pca, seed, blocked_pca_features=0):
 
 		# get data ready to perform evaluation of SB and verification
 		x_total = load_UTKFace.get_x_ready(utkface_df, length_embeddings)
-		labels = eval_utils.get_labels()
+		labels = eval_utils.get_labels(db)
 		y = load_UTKFace.get_y_ready(utkface_df, labels)
 
 	x_total = std_sc.transform(x_total)
@@ -113,7 +113,7 @@ def execute_evaluation(db, classifiers, use_pca, seed, blocked_pca_features=0):
 	x_second = np.copy(x_total)
 	x_third = np.copy(x_total)
 
-	metrics = eval_utils.get_metric_dict(classifiers)
+	metrics = eval_utils.get_metric_dict(classifiers, db)
 
 	for epoch in range(num_epochs):
 		for ive_method, x in enumerate([x_first, x_second, x_third]):
@@ -136,7 +136,7 @@ def execute_evaluation(db, classifiers, use_pca, seed, blocked_pca_features=0):
 			eer_verification = vp.evaluate_verification(verification_indexes, x, seed) if db == 'diveface' else 'na'
 			txt += 'EER: ' + str(eer_verification)
 			print(txt + ('' if not ive_method == 2 else '\n'))
-			metrics = eval_utils.store_metrics(metrics, ive_method, scores, eer_verification)
+			metrics = eval_utils.store_metrics(metrics, ive_method, scores, eer_verification, db)
 
 		if use_pca:
 			# transform in PCA
@@ -159,7 +159,7 @@ def execute_evaluation(db, classifiers, use_pca, seed, blocked_pca_features=0):
 			x_second = x_second[:, masks['2'][epoch]]
 			x_third = x_third[:, masks['3'][epoch]]
 
-	eval_utils.plot_metrics(metrics, folder, save_files=True)
+	eval_utils.plot_metrics(metrics, folder, db, save_files=True)
 
 
-execute_evaluation('utkface', ['mlp'], True, 0, 3)
+execute_evaluation('diveface', ['mlp'], True, 0, 3)

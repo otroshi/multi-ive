@@ -1,11 +1,8 @@
-from sklearn.neural_network import MLPClassifier
-from sklearn import svm
 import collections
 from imblearn.over_sampling import SMOTE
-from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier, GradientBoostingClassifier
 from sklearn.naive_bayes import GaussianNB
-from sklearn.linear_model import LogisticRegression
 import random
+import evaluation.hyperparameter_finetuning as hyp_ft
 
 
 def get_sample_mask(y_labels, keep_labels, seed, samples_for_label=-1):
@@ -53,24 +50,21 @@ def train_evaluate_classifier(x_train, y_train, x_test, y_test, classifiers, see
 	# filter data according to the explanation of the function filter_data
 	x_train, y_train, x_test, y_test = filter_data(x_train, y_train, x_test, y_test, seed)
 
-
 	# balance training data
 	# oversample = SMOTE(random_state=seed)
 	# x_train, y_train = oversample.fit_resample(x_train, y_train)
 
 	scores = {}
-	n_estimators = 30
 	for c in classifiers:
 		# training
-		# TODO: fix parameters for classifiers different from MLP
-		clf = MLPClassifier(random_state=seed, early_stopping=True, learning_rate='adaptive') if c == 'mlp' else \
-			svm.SVC(random_state=seed, kernel='linear') if c == 'svm_lin' else \
-			svm.SVC(random_state=seed, kernel='rbf') if c == 'svm_rbf' else \
-			RandomForestClassifier(n_estimators=n_estimators, random_state=seed) if c == 'rf' else \
-			GradientBoostingClassifier(n_estimators=n_estimators, n_iter_no_change=10, random_state=seed) if c == 'gb' else \
+		clf = hyp_ft.finetuning_hidden(seed, x_train, y_train) if c == 'mlp' else \
+			hyp_ft.finetuning_C(c, seed, x_train, y_train) if c == 'svm_lin' else \
+			hyp_ft.finetuning_C(c, seed, x_train, y_train) if c == 'svm_rbf' else \
+			hyp_ft.finetuning_estimators(c, seed, x_train, y_train) if c == 'rf' else \
+			hyp_ft.finetuning_estimators(c, seed, x_train, y_train) if c == 'gb' else \
 			GaussianNB() if c == 'nb' else \
-			ExtraTreesClassifier(n_estimators=n_estimators, random_state=seed) if c == 'et' else \
-			LogisticRegression(random_state=seed, max_iter=10000) if c == 'log_reg' else \
+			hyp_ft.finetuning_estimators(c, seed, x_train, y_train) if c == 'et' else \
+			hyp_ft.finetuning_C(c, seed, x_train, y_train) if c == 'log_reg' else \
 			None
 		clf.fit(x_train, y_train)
 
