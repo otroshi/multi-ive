@@ -163,3 +163,4 @@ def execute_evaluation(db, classifiers, use_pca, seed, blocked_pca_features=0):
 
 
 execute_evaluation('diveface', ['mlp'], True, 0, 3)
+# ['mlp', 'svm_lin', 'svm_rbf', 'rf', 'gb', 'nb', 'et', 'log_reg']
