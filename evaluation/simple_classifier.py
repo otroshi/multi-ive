@@ -46,7 +46,7 @@ def filter_data(x_train, y_train, x_test, y_test, seed, MIN_SAMPLES=80):
 	return x_train[train_mask], y_train[train_mask], x_test[test_mask], y_test[test_mask]
 
 
-def train_evaluate_classifier(x_train, y_train, x_test, y_test, classifiers, seed):
+def train_evaluate_classifier(x_train, y_train, x_test, y_test, classifiers, ft_classifiers, seed):
 	# filter data according to the explanation of the function filter_data
 	x_train, y_train, x_test, y_test = filter_data(x_train, y_train, x_test, y_test, seed)
 
@@ -55,17 +55,10 @@ def train_evaluate_classifier(x_train, y_train, x_test, y_test, classifiers, see
 	# x_train, y_train = oversample.fit_resample(x_train, y_train)
 
 	scores = {}
-	for c in classifiers:
+	for i, c in enumerate(classifiers):
+		clf = ft_classifiers[i]
+
 		# training
-		clf = hyp_ft.finetuning_hidden(seed, x_train, y_train) if c == 'mlp' else \
-			hyp_ft.finetuning_C(c, seed, x_train, y_train) if c == 'svm_lin' else \
-			hyp_ft.finetuning_C(c, seed, x_train, y_train) if c == 'svm_rbf' else \
-			hyp_ft.finetuning_estimators(c, seed, x_train, y_train) if c == 'rf' else \
-			hyp_ft.finetuning_estimators(c, seed, x_train, y_train) if c == 'gb' else \
-			GaussianNB() if c == 'nb' else \
-			hyp_ft.finetuning_estimators(c, seed, x_train, y_train) if c == 'et' else \
-			hyp_ft.finetuning_C(c, seed, x_train, y_train) if c == 'log_reg' else \
-			None
 		clf.fit(x_train, y_train)
 
 		# evaluation

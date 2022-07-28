@@ -6,8 +6,21 @@ from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 
 
+def get_finetuned_classifiers(classifiers, seed, x_train, y_train):
+	all_ft_classifiers = []
+	for c in classifiers:
+		if c in ['rf', 'gb', 'et']:
+			ft_classifier = finetuning_estimators(c, seed, x_train, y_train)
+		elif c == 'mlp':
+			ft_classifier = finetuning_hidden(seed, x_train, y_train)
+		elif c in ['svm_lin', 'svm_rbf', 'log_reg']:
+			ft_classifier = finetuning_C(c, seed, x_train, y_train)
+		all_ft_classifiers.append(ft_classifier)
+	return all_ft_classifiers
+
+
 def finetuning_estimators(classifier, seed, x_train, y_train):
-	params = {'n_estimators': (100, 500, 1000)}
+	params = {'n_estimators': (100, 250, 500)}
 	cv = RepeatedStratifiedKFold(n_splits=3, n_repeats=1, random_state=seed)
 
 	if classifier == 'rf':
@@ -19,8 +32,8 @@ def finetuning_estimators(classifier, seed, x_train, y_train):
 		search = GridSearchCV(estimator=ExtraTreesClassifier(random_state=seed), param_grid=params, n_jobs=-1, cv=cv)
 
 	search.fit(x_train, y_train)
-	print(search.best_score_)
-	print(search.best_params_)
+	# print(search.best_score_)
+	# print(search.best_params_)
 
 	n_est = search.best_params_['n_estimators']
 
@@ -40,8 +53,8 @@ def finetuning_hidden(seed, x_train, y_train):
 						  param_grid=params, n_jobs=-1, cv=cv)
 
 	search.fit(x_train, y_train)
-	print(search.best_score_)
-	print(search.best_params_)
+	# print(search.best_score_)
+	# print(search.best_params_)
 
 	hls = search.best_params_['hidden_layer_sizes']
 
@@ -61,8 +74,8 @@ def finetuning_C(classifier, seed, x_train, y_train):
 							  param_grid=params, n_jobs=-1, cv=cv)
 
 	search.fit(x_train, y_train)
-	print(search.best_score_)
-	print(search.best_params_)
+	# print(search.best_score_)
+	# print(search.best_params_)
 
 	c = search.best_params_['C']
 

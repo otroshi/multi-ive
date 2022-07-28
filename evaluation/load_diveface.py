@@ -62,7 +62,7 @@ def get_diveface_df(embeddings_path, seed, save_files=False, limit_size=False):
 												   (ordered_filenames_lab_df['ethnicity'] == eth_code)]
 				pats = list(tmp['users'].unique())
 				random.shuffle(pats)
-				pats_to_keep += pats[:2000]
+				pats_to_keep += pats[:1000]
 
 		ordered_filenames_lab_df = ordered_filenames_lab_df[ordered_filenames_lab_df['users'].isin(pats_to_keep)]
 

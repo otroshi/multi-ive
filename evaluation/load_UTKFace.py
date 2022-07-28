@@ -53,7 +53,7 @@ def get_utkface_df(embeddings_path, seed, save_files=False, limit_size=False):
 			tmp = ordered_filenames_lab_df.loc[ordered_filenames_lab_df['age'] == age_code]
 			indexes = list(tmp['initialIndex'])
 			random.shuffle(indexes)
-			indexes_to_keep += indexes[:4000]
+			indexes_to_keep += indexes[:2000]
 
 		ordered_filenames_lab_df = ordered_filenames_lab_df[ordered_filenames_lab_df['initialIndex'].isin(indexes_to_keep)]
 

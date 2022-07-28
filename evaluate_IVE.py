@@ -8,6 +8,7 @@ import evaluation.simple_classifier as simple_classifier
 import evaluation.verification_performance as vp
 import pandas as pd
 import random
+import evaluation.hyperparameter_finetuning as hyp_ft
 
 
 def zeros_pca(x_total, mask):
@@ -54,6 +55,8 @@ def fix_pca_masks(masks):
 
 
 def execute_evaluation(db, classifiers, use_pca, seed, blocked_pca_features=0):
+	# fine-tune classifiers every N_EPOCHS_FT
+	N_EPOCHS_FT = 25
 	folder = str(seed) + ('_pca' if use_pca else '_NO_pca')
 
 	# load scaler and PCA
@@ -115,6 +118,8 @@ def execute_evaluation(db, classifiers, use_pca, seed, blocked_pca_features=0):
 
 	metrics = eval_utils.get_metric_dict(classifiers, db)
 
+	dict_ft_classifiers = {'0': {}, '1': {}, '2': {}}
+
 	for epoch in range(num_epochs):
 		for ive_method, x in enumerate([x_first, x_second, x_third]):
 			x_train = x[train_indexes]
@@ -124,9 +129,18 @@ def execute_evaluation(db, classifiers, use_pca, seed, blocked_pca_features=0):
 
 			scores = []
 			for i, label in enumerate(labels):
+
+				# every n epochs finetune the classifiers
+				if (epoch % N_EPOCHS_FT) == 0:
+					all_ft_classifiers = hyp_ft.get_finetuned_classifiers(classifiers, seed, x_train, y_train[:, i])
+					dict_ft_classifiers[str(ive_method)][label] = all_ft_classifiers
+					print('Classifiers fine-tuned! Epoch ' + str(epoch) + ', label ' + label)
+
+				# get the list of ft-classifiers specific for method and label
+				ft_classifiers = dict_ft_classifiers[str(ive_method)][label]
 				# compute the scores of every sb-classifier and store them
 				score = simple_classifier.train_evaluate_classifier(x_train, y_train[:, i], x_test, y_test[:, i],
-																	classifiers, seed)
+																	classifiers, ft_classifiers, seed)
 				scores.append(score)
 			txt = 'Epoch ' + str(epoch) + ' (Method ' + str(ive_method) + ') --> '
 			for s, l in zip(scores, labels):
@@ -162,5 +176,10 @@ def execute_evaluation(db, classifiers, use_pca, seed, blocked_pca_features=0):
 	eval_utils.plot_metrics(metrics, folder, db, save_files=True)
 
 
-execute_evaluation('diveface', ['mlp'], True, 0, 3)
+for seed in range(10):
+	execute_evaluation('diveface', ['mlp', 'svm_lin', 'et', 'log_reg'], False, seed)
+	for k in [0, 3, 5]:
+		execute_evaluation('diveface', ['mlp', 'svm_lin', 'et', 'log_reg'], True, seed, k)
+
+# TODO: same evaluation with utkface (for age) and both diveface and utkface for ICA (fix the code to read ICA folders)
 # ['mlp', 'svm_lin', 'svm_rbf', 'rf', 'gb', 'nb', 'et', 'log_reg']
