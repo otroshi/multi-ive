@@ -12,6 +12,8 @@ data/utkface*
 
 results/
 
+plot/*.pdf
+
 scratch.py
 
 data/train*.csv
