@@ -103,7 +103,7 @@ def get_verification_indexes(diveface_df, seed, length_embedding, genuine=3):
 	# here we do not need the embeddings
 	diveface_df = diveface_df.drop(['f' + str(i) for i in range(length_embedding)], axis=1)
 	# consider three random sample for each subject
-	df_gby = diveface_df.groupby('users').apply(lambda x: x.sample(min(3, len(x)), random_state=seed))
+	df_gby = diveface_df.groupby('users').apply(lambda x: x.sample(min(genuine, len(x)), random_state=seed))
 
 	for ax, _ in df_gby.iterrows():
 		user = ax[0]

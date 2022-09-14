@@ -62,7 +62,7 @@ class IncrementalVariableElimination():
         else:
             f_importance_cum = np.zeros((X.shape[1],))
 
-            for i in range(3):
+            for i in range(y.shape[1]):
                 # train model
                 model.fit(X, y[:, i])
 
@@ -70,6 +70,8 @@ class IncrementalVariableElimination():
                 f_imp = model.feature_importances_
                 # sum feature importance for each variable to eliminate
                 f_importance_cum += f_imp
+
+            self.f_importance_cum = f_importance_cum
 
         f_imp_argsort = np.argsort(f_importance_cum)[::-1]
 

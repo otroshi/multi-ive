@@ -6,13 +6,17 @@ data/myselection*
 
 data/utkface*
 
+plot/*.jpg
+
+plot/*.pdf
+
+plot/tsne/
+
 .idea/
 
 */__pycache__/
 
 results/
-
-plot/*.pdf
 
 scratch.py
 

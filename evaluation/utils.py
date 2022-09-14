@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import random
 
 
 key_list = ['first', 'second', 'third']
@@ -77,3 +78,33 @@ def plot_metrics(metrics, folder, db, save_files=True):
 			plt.savefig(os.path.join(os.path.join('results', folder), 'metrics_{}.pdf'.format(key2)))
 
 
+def create_random_mask_no_pca(seed, length_embedding):
+	random.seed(seed)
+	num_epochs = 170
+	masks = []
+	final_folder = os.path.join('results', str(seed) + '_rdm', 'method1')
+	os.makedirs(final_folder, exist_ok=True)
+
+	for epoch in range(num_epochs):
+		indexes = [ii for ii in range(length_embedding - (epoch * 3))]
+		random.shuffle(indexes)
+		ind_false = indexes[:3]
+		mask = np.array([ix not in ind_false for ix in range(length_embedding - (epoch * 3))])
+		masks.append(mask)
+		np.save(os.path.join(final_folder, "{0:03}".format(epoch)), mask)
+
+	return masks
+
+
+# def create_random_masks_pca(seed, k, length_embedding):
+# 	random.seed(seed)
+# 	masks = {'1': [], '2': [], '3': []}
+# 	num_epochs = 170
+# 	for i in range(1, 4):
+# 		indexes = [ii for ii in range(k, length_embedding)]
+# 		random.shuffle(indexes)
+# 		for epoch in range(num_epochs):
+# 			ind_false = indexes[:(epoch+1)*3]
+# 			mask = np.array([ix not in ind_false for ix in range(length_embedding)])
+# 			masks[str(i)].append(mask)
+# 	return masks

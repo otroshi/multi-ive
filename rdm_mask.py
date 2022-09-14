@@ -1,43 +1,13 @@
+import evaluation.utils as eval_utils
 import pickle as pk
 import os
 import numpy as np
+import pandas as pd
 import evaluation.load_diveface as load_diveface
 import evaluation.load_UTKFace as load_UTKFace
-import evaluation.utils as eval_utils
+import evaluation.hyperparameter_finetuning as hyp_ft
 import evaluation.simple_classifier as simple_classifier
 import evaluation.verification_performance as vp
-import pandas as pd
-import random
-import evaluation.hyperparameter_finetuning as hyp_ft
-
-
-def zeros_pca(x_total, mask):
-	# store indexes where the mask is False.
-	indexes = [i for i, m in enumerate(mask) if not m]
-	# The features related to those indexes need to be zero.
-	for ind in indexes:
-		x_total[:, ind] = np.zeros((len(x_total)))
-	return x_total
-
-
-def fix_pca_masks(masks):
-	new_masks = {'1': [], '2': [], '3': []}
-	for i in range(1, 4):
-		for epoch in range(len(masks[str(i)])):
-			# first epoch does not need any fix
-			if len(new_masks[str(i)]) == 0:
-				new_masks[str(i)].append(masks[str(i)][0])
-
-			else:
-				prev_mask = new_masks[str(i)][-1]
-				prev_indexes = [i for i, m in enumerate(prev_mask) if not m]
-				curr_mask = masks[str(i)][epoch]
-				# fix the indexes removed at the previous iteration in the new mask to store
-				for ix in prev_indexes:
-					curr_mask = np.insert(curr_mask, ix, False)
-				new_masks[str(i)].append(curr_mask)
-
-	return new_masks
 
 
 def execute_evaluation(db, classifiers, transform, seed, blocked_features=0):
@@ -45,14 +15,6 @@ def execute_evaluation(db, classifiers, transform, seed, blocked_features=0):
 	N_EPOCHS_FT = 25
 	N_EPOCHS_EVAL = 5
 	folder = str(seed) + ('_' + transform)
-	if transform == 'pca' or transform == 'ica':
-		folder = folder + '_k=' + str(blocked_features)
-
-	# load scaler and PCA
-	if transform == 'pca':
-		pca = pk.load(open(os.path.join(os.path.join('results', folder), 'pca.pkl'), 'rb'))
-	if transform == 'ica':
-		ica = pk.load(open(os.path.join(os.path.join('results', folder), 'ica.pkl'), 'rb'))
 
 	std_sc = pk.load(open(os.path.join(os.path.join('results', folder), 'std_sc.pkl'), 'rb'))
 
@@ -64,9 +26,6 @@ def execute_evaluation(db, classifiers, transform, seed, blocked_features=0):
 			filename = "{0:03}.npy".format(epoch)
 			mask = np.load(os.path.join('results', folder, 'method' + str(i), filename))
 			masks[str(i)].append(mask)
-
-	if transform == 'pca' or transform == 'ica':
-		masks = fix_pca_masks(masks)
 
 	# load data for evaluation
 	if db == 'diveface':
@@ -113,7 +72,7 @@ def execute_evaluation(db, classifiers, transform, seed, blocked_features=0):
 
 	for epoch in range(num_epochs):
 		if (epoch % N_EPOCHS_EVAL) == 0:
-			for ive_method, x in enumerate([x_first, x_second, x_third]):
+			for ive_method, x in enumerate([x_first]):
 				x_train = x[train_indexes]
 				x_test = x[test_indexes]
 				y_train = y[train_indexes]
@@ -148,70 +107,18 @@ def execute_evaluation(db, classifiers, transform, seed, blocked_features=0):
 				print(txt + ('' if not ive_method == 2 else '\n'))
 				metrics = eval_utils.store_metrics(metrics, ive_method, scores, eer_verification, db)
 
-		if transform == 'pca':
-			# transform in PCA
-			x_first = pca.transform(x_first)
-			x_second = pca.transform(x_second)
-			x_third = pca.transform(x_third)
+		x_first = x_first[:, masks['1'][epoch]]
+		x_second = x_second[:, masks['2'][epoch]]
+		x_third = x_third[:, masks['3'][epoch]]
 
-			# eliminate features in PCA
-			x_first = zeros_pca(x_first, masks['1'][epoch])
-			x_second = zeros_pca(x_second, masks['2'][epoch])
-			x_third = zeros_pca(x_third, masks['3'][epoch])
-
-			# transform from PCA to original domain
-			x_first = pca.inverse_transform(x_first)
-			x_second = pca.inverse_transform(x_second)
-			x_third = pca.inverse_transform(x_third)
-
-		elif transform == 'ica':
-			# transform in PCA
-			x_first = ica.transform(x_first)
-			x_second = ica.transform(x_second)
-			x_third = ica.transform(x_third)
-
-			# eliminate features in PCA
-			x_first = zeros_pca(x_first, masks['1'][epoch])
-			x_second = zeros_pca(x_second, masks['2'][epoch])
-			x_third = zeros_pca(x_third, masks['3'][epoch])
-
-			# transform from PCA to original domain
-			x_first = ica.inverse_transform(x_first)
-			x_second = ica.inverse_transform(x_second)
-			x_third = ica.inverse_transform(x_third)
-
-		else:
-			x_first = x_first[:, masks['1'][epoch]]
-			x_second = x_second[:, masks['2'][epoch]]
-			x_third = x_third[:, masks['3'][epoch]]
-
-	eval_utils.plot_metrics(metrics, folder, db, save_files=True)
+	if db == 'diveface':
+		np.save(os.path.join('results', folder, 'sex.npy'), np.array(metrics['first']['sex']['mlp']))
+		np.save(os.path.join('results', folder, 'ethnicity.npy'), np.array(metrics['first']['ethnicity']['mlp']))
+		np.save(os.path.join('results', folder, 'verification.npy'), np.array(metrics['first']['verification']))
+	else:
+		np.save(os.path.join('results', folder, 'age.npy'), np.array(metrics['first']['age']['mlp']))
 
 
-execute_evaluation('diveface', ['mlp'], 'pca', 0, 0)
-# for seed in range(10):
-# 	execute_evaluation('utkface', ['mlp'], 'NO_pca', seed)
-# 	for k in [0, 3, 5]:
-# 		execute_evaluation('utkface', ['mlp'], 'pca', seed, k)
-# 	execute_evaluation('utkface', ['mlp'], 'ica', seed)
-#
-# other_classifiers = ['svm_lin', 'et', 'log_reg']
-# databases = ['diveface', 'utkface']
-# for db in databases:
-# 	for seed in range(10):
-# 		execute_evaluation(db, other_classifiers, 'NO_pca', seed)
-# 		for k in [0, 3, 5]:
-# 			execute_evaluation(db, other_classifiers, 'pca', seed, k)
-# 		execute_evaluation(db, other_classifiers, 'ica', seed)
-
-# selected --> ['mlp', 'svm_lin', 'et', 'log_reg']
-# all --> ['mlp', 'svm_lin', 'svm_rbf', 'rf', 'gb', 'nb', 'et', 'log_reg']
-
-# other_classifiers = ['svm_lin', 'et', 'log_reg']
-# databases = ['diveface', 'utkface']
-# for seed in range(10):
-# 	for db in databases:
-# 		execute_evaluation(db, other_classifiers, 'NO_pca', seed)
-# 		for k in [0, 3, 5]:
-# 			execute_evaluation(db, other_classifiers, 'pca', seed, k)
-# 		execute_evaluation(db, other_classifiers, 'ica', seed)
+execute_evaluation('diveface', ['mlp'], 'rdm', 9)
+for seed in range(1, 10):
+	execute_evaluation('utkface', ['mlp'], 'rdm', seed)
