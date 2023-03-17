@@ -33,5 +33,7 @@ Masks can be generated for the following settings:
 ## Evaluation
 
 Use the file [evaluate_IVE.py](https://github.com/otroshi/multi-ive/blob/main/evaluate_IVE.py) to evaluate Multi-IVE as in the paper. 
+
 Use the file [first_components_pca.py](https://github.com/otroshi/multi-ive/blob/main/first_components_pca.py) to evaluate Multi-IVE in the scenario of principal component elimination in the order of their importance. 
+
 Use the file [rdm_mask.py](https://github.com/otroshi/multi-ive/blob/main/rdm_mask.py) to evaluate Multi-IVE in the scenario of random feature elimination.  
